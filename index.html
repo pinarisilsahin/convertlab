@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ConvertLab</title>
+<meta name="description" content="Unit conversions for engineers. Fast. Free. Accurate.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+<style>
+  :root {
+    --bg: #f5f5f4;
+    --card: #ffffff;
+    --text: #1c1917;
+    --muted: #57534e;
+    --border: #e7e5e4;
+    --accent: #d97757;
+    --accent-dark: #c2603f;
+    --chip: #f5f5f4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  nav {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .nav-inner {
+    max-width: 960px; margin: 0 auto; padding: 14px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .logo { font-weight: 700; text-decoration: none; color: var(--text); }
+  .nav-links a {
+    margin-left: 20px; color: var(--muted); text-decoration: none; font-size: 14px;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  .hero { text-align: center; padding: 64px 16px 32px; }
+  .hero h1 { font-size: clamp(28px, 5vw, 44px); margin: 0 0 12px; line-height: 1.2; }
+  .hero p { color: var(--muted); margin: 0; }
+
+  section { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+
+  .converter {
+    max-width: 620px; margin: 24px auto 64px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.05);
+  }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .tab {
+    border: 1px solid var(--border); background: var(--chip);
+    padding: 6px 14px; border-radius: 999px; cursor: pointer;
+    font-size: 14px; color: var(--text); font-family: inherit;
+  }
+  .tab:hover { border-color: var(--accent); }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; }
+  .col { display: flex; flex-direction: column; gap: 8px; }
+  input, select {
+    width: 100%; padding: 10px 12px; font-size: 16px; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--text);
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  input[readonly] { background: #fafaf9; }
+  .swap {
+    border: 1px solid var(--border); background: #fff; border-radius: 8px;
+    width: 40px; height: 40px; cursor: pointer; font-size: 18px;
+  }
+  .swap:hover { border-color: var(--accent); color: var(--accent); }
+  .result { margin-top: 14px; font-family: ui-monospace, Consolas, monospace; font-size: 14px; color: var(--muted); min-height: 20px; }
+  .formula { font-size: 13px; color: var(--muted); margin: 0 0 16px; }
+  label { font-size: 13px; color: var(--muted); }
+  .mech { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .mech .full { grid-column: 1 / -1; }
+  .hidden { display: none; }
+
+  #pricing { padding-bottom: 80px; }
+  #pricing h2 { text-align: center; font-size: 30px; margin: 0 0 32px; }
+  .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 760px; margin: 0 auto; }
+  .plan {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px; text-align: center;
+  }
+  .plan.featured { border: 2px solid var(--accent); }
+  .plan h3 { margin: 0 0 8px; font-size: 16px; }
+  .price { font-size: 36px; font-weight: 700; margin: 0 0 16px; }
+  .price span { font-size: 16px; font-weight: 400; color: var(--muted); }
+  .plan ul { list-style: none; padding: 0; margin: 0 0 24px; text-align: left; }
+  .plan li { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .plan li::before { content: "✓ "; color: var(--accent); font-weight: 700; }
+  .btn {
+    display: inline-block; padding: 10px 22px; border-radius: 8px;
+    text-decoration: none; font-weight: 600; font-size: 14px;
+    border: 1px solid var(--accent); color: var(--accent);
+  }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent-dark); }
+
+  footer { text-align: center; padding: 24px 16px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); }
+
+  @media (max-width: 560px) {
+    .row { grid-template-columns: 1fr; }
+    .swap { justify-self: center; transform: rotate(90deg); }
+    .mech { grid-template-columns: 1fr; }
+    .converter { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#">⚙️ ConvertLab</a>
+    <div class="nav-links">
+      <a href="#converter">Converter</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <h1>Unit conversions for engineers.<br>Fast. Free. Accurate.</h1>
+  <p>Length, mass, temperature, pressure and energy in one clean tool.</p>
+</header>
+
+<section id="converter">
+  <div class="converter">
+    <div class="tabs" id="tabs"></div>
+
+    <!-- Standard unit converter -->
+    <div id="unitPanel">
+      <div class="row">
+        <div class="col">
+          <input id="fromVal" type="number" value="1" step="any" aria-label="From value">
+          <select id="fromUnit" aria-label="From unit"></select>
+        </div>
+        <button class="swap" id="swap" title="Swap units" aria-label="Swap units">⇄</button>
+        <div class="col">
+          <input id="toVal" type="number" readonly aria-label="Result">
+          <select id="toUnit" aria-label="To unit"></select>
+        </div>
+      </div>
+      <div class="result" id="result"></div>
+    </div>
+
+    <!-- Mechanical: power from torque -->
+    <div id="mechPanel" class="hidden">
+      <p class="formula">Power from torque: <b>P = T × ω</b>, where ω = 2π × rpm / 60</p>
+      <div class="mech">
+        <div class="col">
+          <label for="torque">Torque</label>
+          <input id="torque" type="number" value="100" step="any">
+          <select id="torqueUnit">
+            <option value="1">N·m</option>
+            <option value="1.3558179483">lbf·ft</option>
+            <option value="0.1129848290">lbf·in</option>
+            <option value="9.80665">kgf·m</option>
+          </select>
+        </div>
+        <div class="col">
+          <label for="rpm">Speed</label>
+          <input id="rpm" type="number" value="3000" step="any">
+          <select id="speedUnit">
+            <option value="rpm">rpm</option>
+            <option value="rad">rad/s</option>
+          </select>
+        </div>
+        <div class="col full">
+          <label for="power">Power</label>
+          <div class="row" style="grid-template-columns: 1fr 1fr;">
+            <input id="power" type="number" readonly>
+            <select id="powerUnit">
+              <option value="1">W</option>
+              <option value="1000" selected>kW</option>
+              <option value="745.69987158">hp (mechanical)</option>
+              <option value="735.49875">PS (metric hp)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="result" id="mechResult"></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <h2>Pricing</h2>
+  <div class="plans">
+    <div class="plan">
+      <h3>Student</h3>
+      <p class="price">$0</p>
+      <ul>
+        <li>All 6 unit categories</li>
+        <li>Unlimited conversions</li>
+        <li>Works on mobile</li>
+      </ul>
+      <a class="btn" href="#converter">Start free</a>
+    </div>
+    <div class="plan featured">
+      <h3>Pro</h3>
+      <p class="price">$4<span>/mo</span></p>
+      <ul>
+        <li>Everything in Student</li>
+        <li>Saved conversion history</li>
+        <li>Custom units &amp; precision</li>
+        <li>Priority support</li>
+      </ul>
+      <a class="btn primary" href="#converter">Go Pro</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  © <span id="year"></span> ConvertLab · Built with Claude Code
+</footer>
+
+<script>
+  // Factors convert each unit TO the base unit of its category.
+  const CATEGORIES = {
+    Length: {
+      base: "m",
+      units: { mm: 0.001, cm: 0.01, m: 1, km: 1000, in: 0.0254, ft: 0.3048, yd: 0.9144, mi: 1609.344 },
+      from: "mm", to: "cm"
+    },
+    Mass: {
+      base: "kg",
+      units: { mg: 1e-6, g: 0.001, kg: 1, t: 1000, oz: 0.028349523125, lb: 0.45359237 },
+      from: "kg", to: "lb"
+    },
+    Pressure: {
+      base: "Pa",
+      units: { Pa: 1, kPa: 1000, MPa: 1e6, bar: 1e5, atm: 101325, psi: 6894.757293168, mmHg: 133.322387415 },
+      from: "bar", to: "psi"
+    },
+    Energy: {
+      base: "J",
+      units: { J: 1, kJ: 1000, MJ: 1e6, cal: 4.184, kcal: 4184, Wh: 3600, kWh: 3.6e6, BTU: 1055.05585262 },
+      from: "kWh", to: "MJ"
+    },
+    Temperature: {
+      units: { "°C": null, "°F": null, K: null },
+      from: "°C", to: "°F"
+    },
+    Mechanical: { special: true }
+  };
+
+  // Temperature: convert to Celsius, then to target
+  const toC = { "°C": v => v, "°F": v => (v - 32) * 5 / 9, K: v => v - 273.15 };
+  const fromC = { "°C": v => v, "°F": v => v * 9 / 5 + 32, K: v => v + 273.15 };
+
+  const $ = id => document.getElementById(id);
+  let current = "Length";
+
+  function fmt(n) {
+    if (!isFinite(n)) return "";
+    if (n === 0) return "0";
+    const abs = Math.abs(n);
+    if (abs >= 1e9 || abs < 1e-6) return n.toExponential(6).replace(/\.?0+e/, "e");
+    return String(parseFloat(n.toPrecision(10)));
+  }
+
+  function buildTabs() {
+    const tabs = $("tabs");
+    Object.keys(CATEGORIES).forEach(name => {
+      const b = document.createElement("button");
+      b.className = "tab" + (name === current ? " active" : "");
+      b.textContent = name;
+      b.onclick = () => selectCategory(name);
+      tabs.appendChild(b);
+    });
+  }
+
+  function selectCategory(name) {
+    current = name;
+    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.textContent === name));
+    const cat = CATEGORIES[name];
+    $("unitPanel").classList.toggle("hidden", !!cat.special);
+    $("mechPanel").classList.toggle("hidden", !cat.special);
+    if (cat.special) { calcMech(); return; }
+
+    ["fromUnit", "toUnit"].forEach(id => {
+      const sel = $(id);
+      sel.innerHTML = "";
+      Object.keys(cat.units).forEach(u => sel.add(new Option(u, u)));
+    });
+    $("fromUnit").value = cat.from;
+    $("toUnit").value = cat.to;
+    convert();
+  }
+
+  function convert() {
+    const v = parseFloat($("fromVal").value);
+    const from = $("fromUnit").value, to = $("toUnit").value;
+    if (isNaN(v)) { $("toVal").value = ""; $("result").textContent = ""; return; }
+
+    let out;
+    if (current === "Temperature") {
+      out = fromC[to](toC[from](v));
+    } else {
+      const u = CATEGORIES[current].units;
+      out = v * u[from] / u[to];
+    }
+    $("toVal").value = fmt(out);
+    $("result").textContent = `${fmt(v)} ${from} = ${fmt(out)} ${to}`;
+  }
+
+  function calcMech() {
+    const T = parseFloat($("torque").value) * parseFloat($("torqueUnit").value); // N·m
+    const s = parseFloat($("rpm").value);
+    const omega = $("speedUnit").value === "rpm" ? s * 2 * Math.PI / 60 : s;  // rad/s
+    if (isNaN(T) || isNaN(omega)) { $("power").value = ""; $("mechResult").textContent = ""; return; }
+    const P = T * omega; // W
+    const unitSel = $("powerUnit");
+    const out = P / parseFloat(unitSel.value);
+    $("power").value = fmt(out);
+    $("mechResult").textContent =
+      `ω = ${fmt(omega)} rad/s → P = ${fmt(T)} N·m × ${fmt(omega)} rad/s = ${fmt(P)} W (${fmt(out)} ${unitSel.selectedOptions[0].text})`;
+  }
+
+  $("fromVal").addEventListener("input", convert);
+  $("fromUnit").addEventListener("change", convert);
+  $("toUnit").addEventListener("change", convert);
+  $("swap").addEventListener("click", () => {
+    const f = $("fromUnit").value;
+    $("fromUnit").value = $("toUnit").value;
+    $("toUnit").value = f;
+    convert();
+  });
+  ["torque", "torqueUnit", "rpm", "speedUnit", "powerUnit"].forEach(id => {
+    $(id).addEventListener("input", calcMech);
+    $(id).addEventListener("change", calcMech);
+  });
+
+  $("year").textContent = new Date().getFullYear();
+  buildTabs();
+  selectCategory("Length");
+</script>
+</body>
+</html>
